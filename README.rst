@@ -27,6 +27,8 @@ Features
 --------
 
 * TODO
+ * Fill in documentation
+ * Get PyBombs to install hackrf automatically
 
 Credits
 -------
