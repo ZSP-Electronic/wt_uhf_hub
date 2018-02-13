@@ -38,7 +38,7 @@ setup(
     author="Zachary Pina",
     author_email='zacharypina@gmail.com',
     url='https://github.com/ZSPina/wt_uhf_hub',
-    packages=find_packages(exclude=['docs', 'tests', 'venv']),
+    packages=find_packages(exclude=['docs', 'tests']),
     entry_points={
         'console_scripts': [
             'wt_uhf_hub=wt_uhf_hub.cli:main',
