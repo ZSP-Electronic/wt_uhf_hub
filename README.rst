@@ -25,7 +25,7 @@ Archive files of frequency spectrum using hackrf controlled by Beaglebone Black 
 Installation on Debian
 ------------
 
-You can either clone the public repository:
+You can clone the public repository:
     
 .. code-block:: terminal
 
