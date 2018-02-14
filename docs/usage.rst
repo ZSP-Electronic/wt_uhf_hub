@@ -2,10 +2,6 @@
 Usage
 =====
 
-WT_UHF_Hub is a project and to run it::
+To use WT_UHF_Hub in a project::
 
-    python wt_uhf_hub.py
-
-To control Hackrf One in a project::
-
-    from pylibhackrf import hackrfCtrl
+    import wt_uhf_hub

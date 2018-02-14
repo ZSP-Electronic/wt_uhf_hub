@@ -6,3 +6,8 @@ History
 ------------------
 
 * First release on PyPI.
+
+0.9.1 (2018-02-13)
+------------------
+
+* Updated setup.py
