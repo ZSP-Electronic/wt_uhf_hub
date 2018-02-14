@@ -11,3 +11,9 @@ History
 ------------------
 
 * Updated setup.py
+
+0.9.1.1 (2018-02-13)
+------------------
+
+* Tried Updating setup.py
+* Fixed issue of variables maintaining value after rerun through while loop
