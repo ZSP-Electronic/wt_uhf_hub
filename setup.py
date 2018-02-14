@@ -5,10 +5,6 @@
 import os
 from setuptools import setup, find_packages
 
-os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
-with open('requirements.txt') as requirements:
-    install_requires = requirements.read().splitlines()
-
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
