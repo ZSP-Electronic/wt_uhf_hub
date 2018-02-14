@@ -35,7 +35,8 @@ Install a prefix to PyBOMBS for libhackrf.so
     $ pybombs install hackrf
     
 Run the wt_uhf_hub program in terminal:
-Prior to running, install JSON file from Google Cloud to allow permissions
+
+Prior to running, install JSON file from Google Cloud to allow permissions.
   
 .. code-block:: terminal
   
