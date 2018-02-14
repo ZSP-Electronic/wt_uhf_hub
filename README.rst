@@ -39,7 +39,14 @@ Install a prefix to PyBOMBS for libhackrf.so
 
     $ pybombs prefix init ~/prefix/default/
     $ pybombs install hackrf
+    
+Run the wt_uhf_hub program in terminal:
 
+.. code-block:: terminal
+
+    $ cd wt_uhf_hub
+    $ python wt_uhf_hub.py
+    
 Features
 --------
 
