@@ -21,14 +21,6 @@ Archive files of frequency spectrum using hackrf controlled by Beaglebone Black 
 
 * Free software: MIT license
 * Documentation: https://wt-uhf-hub.readthedocs.io.
-
-
-Features
---------
-
-* TODO
- * Fill in documentation
- * Get PyBombs to install hackrf automatically
  
 Installation on Debian
 ------------
@@ -40,6 +32,13 @@ You can either clone the public repository:
     $ git clone git://github.com/ZSPina/wt_uhf_hub
     $ cd wt_uhf_hub
     $ python setup.py install
+    
+Features
+--------
+
+* TODO
+ * Fill in documentation
+ * Get PyBombs to install hackrf automatically
 
 Credits
 -------
