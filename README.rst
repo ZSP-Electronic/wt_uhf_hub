@@ -33,8 +33,6 @@ Features
 Installation on Debian
 ------------
 
-The sources for WT_UHF_Hub can be downloaded from the `Github repo`_.
-
 You can either clone the public repository:
 
 .. code-block:: console
