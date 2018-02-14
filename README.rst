@@ -26,17 +26,19 @@ Installation on Debian
 ------------
 
 You can either clone the public repository:
-```
-git clone git://github.com/ZSPina/wt_uhf_hub
-cd wt_uhf_hub
-python setup.py install
-```
+    
+.. code-block:: terminal
+
+    $ git clone git://github.com/ZSPina/wt_uhf_hub
+    $ cd wt_uhf_hub
+    $ python setup.py install
+        
 Install a prefix to PyBOMBS for libhackrf.so
 
-```
-pybombs prefix init ~/prefix/default/
-pybombs install hackrf
-```
+.. code-block:: terminal
+
+    $ pybombs prefix init ~/prefix/default/
+    $ pybombs install hackrf
 
 Features
 --------
