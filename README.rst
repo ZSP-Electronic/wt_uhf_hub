@@ -30,7 +30,7 @@ Features
  * Fill in documentation
  * Get PyBombs to install hackrf automatically
  
-Installation
+Installation on Debian
 ------------
 
 The sources for WT_UHF_Hub can be downloaded from the `Github repo`_.
@@ -40,6 +40,8 @@ You can either clone the public repository:
 .. code-block:: console
 
     $ git clone git://github.com/ZSPina/wt_uhf_hub
+    $ cd wt_uhf_hub
+    $ python setup.py install
 
 Credits
 -------
