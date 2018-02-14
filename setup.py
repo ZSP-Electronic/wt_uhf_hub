@@ -24,7 +24,7 @@ requirements = [
 
 setup(
     name='wt_uhf_hub',
-    version='0.9.1',
+    version='0.9.1.1',
     long_description=readme + '\n\n' + history,
     author="Zachary Pina",
     author_email='zacharypina@gmail.com',
