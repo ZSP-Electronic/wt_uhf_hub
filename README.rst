@@ -16,37 +16,37 @@ WT_UHF_Hub (Currently Broken)
 
 
 
--Installation on Debian
- -------------
- -
- -You can clone the public repository:
- -    
- -.. code-block:: terminal
- -
- -    $ git clone git://github.com/ZSPina/wt_uhf_hub
- -    $ cd wt_uhf_hub
- -    $ python setup.py install
- -        
- -Install a prefix to PyBOMBS for libhackrf.so
- -
- -.. code-block:: terminal
- -
- -    $ pybombs prefix init ~/prefix/default/
- -    $ pybombs install hackrf
- -    
- -Run the wt_uhf_hub program in terminal:
+Installation on Debian
+-------------
+
+You can clone the public repository:
+
+.. code-block:: terminal
+
+    $ git clone git://github.com/ZSPina/wt_uhf_hub
+    $ cd wt_uhf_hub
+    $ python setup.py install
+        
+Install a prefix to PyBOMBS for libhackrf.so
+
+.. code-block:: terminal
+
+    $ pybombs prefix init ~/prefix/default/
+    $ pybombs install hackrf
+    
+Run the wt_uhf_hub program in terminal:
   
- -.. code-block:: terminal
+.. code-block:: terminal
   
- -    $ cd wt_uhf_hub
- -    $ python wt_uhf_hub.py
- -    
-  Features
-  --------
+    $ cd wt_uhf_hub
+    $ python wt_uhf_hub.py
+    
+Features
+--------
   
-  * TODO
- - * Fill in documentation
- - * Get PyBombs to install hackrf automatically
+* TODO
+ * Fill in documentation
+ * Get PyBombs to install hackrf automatically
 
 Credits
 -------
