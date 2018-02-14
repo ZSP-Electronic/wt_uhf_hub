@@ -41,6 +41,14 @@ Run the wt_uhf_hub program in terminal:
     $ cd wt_uhf_hub
     $ python wt_uhf_hub.py
     
+Dependancies
+-------------
+* Numpy
+* Google Cloud
+* pyserial
+* PyBombs
+* Adafruit-BBIO (1.0.9 or higher)
+
 Features
 --------
   
