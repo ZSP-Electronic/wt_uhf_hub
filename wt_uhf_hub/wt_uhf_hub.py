@@ -56,6 +56,13 @@ def main():
     
     #InternetErrorFlag = InternetCheck()
     
+    #Initialize global variables to be used 
+    request = False
+    minFreq = 0
+    maxFreq = 0
+    samprate= 0
+    incremFreq = 0
+    
     if Debug:
         import Adafruit_BBIO.UART as UART
         print("Importing UART")
@@ -68,11 +75,6 @@ def main():
     timer2 = time.time()
     
     while True:
-        ''' Initialize global variables to be used '''
-        request = False
-        minFreq = 0
-        maxfreq = 0
-        samprate= 0
         #TODO Fix GPIO for real sd card CD pin
         if GPIO.input("P8_14") == False:
             
@@ -90,18 +92,19 @@ def main():
                     #Put properties of request into varaibles
                     request = tasks['Request']
                     minFreq = tasks['min_frequency']
-                    maxfreq = tasks['max_frequency']
+                    maxFreq = tasks['max_frequency']
                     samprate= tasks['sample_rate']
+                    incremFreq = tasks['increment_frequency']
                     
-                    data = [request, minFreq, maxfreq, samprate]
+                    data = [request, minFreq, incremFreq, maxFreq, samprate]
                     print(data)
                     
                     #If there was a request collect hackrf data immediately
                     if request == True:
-                        runHackrf(InternetFlag, minFreq, maxfreq, samprate)
+                        runHackrf(InternetFlag, incremFreq, maxFreq, samprate)
                         #Set Request == False when return from hackrf
                         tasks['Request'] = False
-                        tasks['min_frequency'] = minFreq + samprate
+                        tasks['increment_frequency'] = incremFreq + samprate
                         client.put(tasks)
                         timer2 = time.time()
                         
@@ -116,7 +119,11 @@ def main():
                 variables allow the database to set them and be placed into
                 this function. '''
             if time.time() - timer2 > 20:
-                runHackrf(InternetFlag, minFreq, maxfreq, samprate)
+                #print(minFreq)
+                #print(incremFreq)
+                #print(maxFreq)
+                #print(samprate)
+                runHackrf(InternetFlag, incremFreq, maxFreq, samprate)
                 
                 timer1 = time.time()
                 timer2 = time.time()
@@ -178,8 +185,9 @@ def runHackrf(internetFlag, Start_frequency=0, Finish_frequency=0, sample_rate=0
         minFreq = tasks['min_frequency']
         maxfreq = tasks['max_frequency']
         samprate= tasks['sample_rate']
+        incremFreq = tasks['increment_frequency']
                 
-        tasks['min_frequency'] = minFreq + samprate
+        tasks['increment_frequency'] = incremFreq + samprate
         client.put(tasks)
         print('Data Updated')
     else:
@@ -187,6 +195,8 @@ def runHackrf(internetFlag, Start_frequency=0, Finish_frequency=0, sample_rate=0
         confirmation = "File {} stored via SD card".format(strname)
         print(confirmation)
         os.remove(strname + '.npz')
+        
+    hackrf.close()
     
     #For debugging out to UART            
     if Debug:
