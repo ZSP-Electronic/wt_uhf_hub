@@ -8,3 +8,8 @@ class installRequired():
         requirelist = pullData.split(',\n')
         for package in requirelist:
             pip.main(['install', package])
+        print("Done")
+
+if __name__ == '__main__':
+    test = installRequired()
+    test.run()
