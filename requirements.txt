@@ -4,5 +4,5 @@ google-cloud-datastore==1.4.0,
 google-cloud-storage==1.6.0,
 numpy==1.13.3,
 PyBOMBS==2.3.2,
-pyserial==3.4
-
+pyserial==3.4,
+pycrypto==2.6.1
