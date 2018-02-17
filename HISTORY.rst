@@ -22,4 +22,5 @@ History
 ------------------
 
 * Fix setup.py to install build
-* Add script to install all pip libraries needed 
+* Add script to install all pip libraries needed
+* Add test scripts for other operations in main code
