@@ -83,9 +83,11 @@ Dependancies
 Features
 --------
   
+* Scans frequency spectrum according to minimum and maximum frequency set in Google datastore
+* Scan multiple samples per one bandwidth as set by input
+* Collects IQ data and stores it as npz file and uploads to Google Storage
+
 * TODO
- * Fill in documentation
- * Get PyBombs to install hackrf automatically
  * Make script to encrypt/decrypt JSON file
 
 Credits
