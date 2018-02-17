@@ -76,6 +76,7 @@ Features
 * TODO
  * Fill in documentation
  * Get PyBombs to install hackrf automatically
+ * Make script to encrypt/decrypt JSON file
 
 Credits
 -------
