@@ -50,10 +50,18 @@ Installation on fresh Debian image
 
 .. code-block:: terminal
 
+    $ cd
     $ pybombs auto-config
     $ pybombs recipes add-defaults
-    $ pybombs prefix init ~/prefix/default/
+    $ pybombs prefix init ~/prefix -a myprefix -R gnuradio-default
     $ pybombs install hackrf
+    
+4.2 Check that libhackrf.so is in the correct file path
+
+.. code-block:: terminal
+
+    $ cd prefix/lib
+    $ ls
     
 5: Run the wt_uhf_hub program in terminal:
 
