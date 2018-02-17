@@ -50,6 +50,8 @@ Installation on fresh Debian image
 
 .. code-block:: terminal
 
+    $ pybombs auto-config
+    $ pybombs recipes add-defaults
     $ pybombs prefix init ~/prefix/default/
     $ pybombs install hackrf
     
