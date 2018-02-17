@@ -16,10 +16,28 @@ WT_UHF_Hub (Currently Broken)
 
 
 
-Installation on Debian
+Installation on fresh Debian image
 -------------
 
-You can clone the public repository:
+1. Expand file system:
+
+.. code-block:: terminal
+
+    $ cd /opt/scripts/tools/
+    $ git pull || true
+    $ sudo ./grow_partition.sh
+    $ sudo reboot
+    
+2. Upgrade kernal to 4.14:
+
+.. code-block:: terminal
+
+    $ sudo apt-get update
+    $ cd /opt/scripts/tools/
+    $ git pull
+    $ sudo ./update_kernel.sh --bone-kernel --lts-4_14
+
+3. Clone the public repository to directory:
 
 .. code-block:: terminal
 
@@ -28,16 +46,16 @@ You can clone the public repository:
     $ sudo python setup.py install
     $ sudo python installRequired.py
         
-Install a prefix to PyBOMBS for libhackrf.so
+4. Install a prefix to PyBOMBS for libhackrf.so:
 
 .. code-block:: terminal
 
     $ pybombs prefix init ~/prefix/default/
     $ pybombs install hackrf
     
-Run the wt_uhf_hub program in terminal:
+5: Run the wt_uhf_hub program in terminal:
 
-Prior to running, install JSON file from Google Cloud to allow permissions.
+        Prior to running, install JSON file from Google Cloud to allow permissions.
   
 .. code-block:: terminal
   
