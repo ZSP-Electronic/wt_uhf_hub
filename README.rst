@@ -69,7 +69,7 @@ Installation on fresh Debian image
   
 .. code-block:: terminal
   
-    $ cd wt_uhf_hub
+    $ cd wt_uhf_hub/wt_uhf_hub
     $ python wt_uhf_hub.py
     
 Dependancies
