@@ -25,7 +25,7 @@ You can clone the public repository:
 
     $ git clone git://github.com/ZSPina/wt_uhf_hub
     $ cd wt_uhf_hub
-    $ python setup.py install
+    $ python installRequired
         
 Install a prefix to PyBOMBS for libhackrf.so
 
