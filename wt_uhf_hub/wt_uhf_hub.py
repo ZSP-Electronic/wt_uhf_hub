@@ -31,22 +31,22 @@ timer2 = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
 
-# Put JSON file name here:
-JSON_LOC = './Hello World-bdfbdf4aa8d5.json'
+# Put JSON file name here include ./ at beginning if in same directory as this program:
+JSON_LOC = '<JSON file name>'
 
 #Put chip detect pin name here:
-CD_PIN = "P8_14"
+CD_PIN = "<PIN NAME>"
 
 # Put bucket name here for Google Storage:
-BUCKET_NAME = 'my_test_bucket32'
+BUCKET_NAME = 'BUCKET NAME'
 
 # Put names for Google Datastore here:
-KIND = 'mylist'
-ID_NAME = 'UHF_Hub_test'
+KIND = '<KIND NAME>'
+ID_NAME = '<ID_NAME>'
 
 # Put UART port names here
-UART_NAME = "UART1"
-UART_PORT = "/dev/ttyO1"
+UART_NAME = "<UART PORT>"
+UART_PORT = "/dev/ttyO<UART NUMBER>"
 
 DEBUG = False
 ENABLE_SD = True
