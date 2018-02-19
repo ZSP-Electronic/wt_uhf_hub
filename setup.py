@@ -21,7 +21,7 @@ with open('HISTORY.rst') as history_file:
 
 setup(
     name                =   'wt_uhf_hub',
-    version             =   '0.9.2.1',
+    version             =   '0.9.3',
     long_description    =   readme + '\n\n' + history,
     author              =   "Zachary Pina",
     author_email        =   'zacharypina@gmail.com',
