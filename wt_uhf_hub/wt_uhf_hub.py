@@ -30,13 +30,24 @@ timer1 = 0
 timer2 = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
+
+# Put JSON file name here:
 JSON_LOC = './Hello World-bdfbdf4aa8d5.json'
+
+#Put chip detect pin name here:
 CD_PIN = "P8_14"
+
+# Put bucket name here for Google Storage:
 BUCKET_NAME = 'my_test_bucket32'
+
+# Put names for Google Datastore here:
 KIND = 'mylist'
 ID_NAME = 'UHF_Hub_test'
+
+# Put UART port names here
 UART_NAME = "UART1"
 UART_PORT = "/dev/ttyO1"
+
 DEBUG = False
 ENABLE_SD = True
 request = False
