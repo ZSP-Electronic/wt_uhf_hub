@@ -24,3 +24,9 @@ History
 * Fix setup.py to install build
 * Add script to install all pip libraries needed
 * Add test scripts for other operations in main code
+
+0.9.3 (2018-02-18)
+------------------
+
+* Update wt_uhf_hub.py to be more universal to allow more compatability across Beaglebone platforms
+* Easier to input personal options for Google Datastore and Google Storage entity names 
