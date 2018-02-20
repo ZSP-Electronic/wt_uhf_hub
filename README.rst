@@ -55,6 +55,7 @@ Installation on fresh Debian image
     $ pybombs auto-config
     $ pybombs recipes add-defaults
     $ pybombs prefix init ~/prefix -a myprefix -R gnuradio-default
+        Installing gnuradio will fail but that is ok. We don't need it
     $ pybombs install hackrf
     
 4.2: Check that libhackrf.so is in the correct file path
