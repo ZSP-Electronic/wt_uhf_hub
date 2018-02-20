@@ -41,7 +41,7 @@ Installation on fresh Debian image
 
 .. code-block:: terminal
 
-    $ cd <DIRECTORY>
+    $ cd < SPECIFIC DIRECTORY>
     $ git clone git://github.com/ZSPina/wt_uhf_hub
     $ cd wt_uhf_hub
     $ sudo python setup.py install
