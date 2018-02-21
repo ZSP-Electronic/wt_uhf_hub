@@ -64,6 +64,8 @@ Installation on fresh Debian image
 
     $ cd prefix/lib
     $ ls
+        Then install hackrf into USB port
+    $ hackrf_info
     
 5: Input personal options for SD card, Google Storage names, Google Datastore names, Permissions JSON name, and UART port name
 
