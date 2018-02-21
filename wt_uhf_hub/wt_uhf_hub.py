@@ -58,7 +58,8 @@ request = False
 client = datastore.Client.from_service_account_json(JSON_LOC)
 hackrf = hackrfCtrl()
 # SD card object declaration
-GPIO.setup(CD_PIN, GPIO.IN)
+if ENABLE_SD:
+    GPIO.setup(CD_PIN, GPIO.IN)
 
 ''' This is the main function that runs on startup. First determines if sd card
     is inserted so device can work. Then runs a request from the Datastore 
