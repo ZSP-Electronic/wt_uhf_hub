@@ -196,11 +196,12 @@ def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0
         samprate= tasks['sample_rate']
         incremFreq = tasks['increment_frequency']
         
-        if incremFreq >= maxFreq:
+        newfreq = incremFreq + samprate
+        
+        if newfreq >= maxFreq:
             print("Setting increment frequency back to minimum frequency")
             tasks['increment_frequency'] = minFreq
         else:
-            newfreq = incremFreq + samprate
             tasks['increment_frequency'] = newfreq
             print('Data Updated')
             
