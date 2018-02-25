@@ -31,19 +31,17 @@ timer2 = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
 
+
+# PUT CREDENTIALS BELOW!
 # Put JSON file name here include ./ at beginning if in same directory as this program:
 JSON_LOC = '<JSON file name>'
-
 #Put chip detect pin name here:
 CD_PIN = "<PIN NAME>"
-
 # Put bucket name here for Google Storage:
 BUCKET_NAME = 'BUCKET NAME'
-
 # Put names for Google Datastore here:
 KIND = '<KIND NAME>'
 ID_NAME = '<ID_NAME>'
-
 # Put UART port names here
 UART_NAME = "<UART PORT>"
 UART_PORT = "/dev/ttyO<UART NUMBER>"
