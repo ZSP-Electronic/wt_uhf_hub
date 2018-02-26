@@ -506,6 +506,7 @@ class hackrfCtrl(HackRf):
         return 0
         
     def hackrf_run(self, numBufferSweep=1):
+        error = False
         self.NFFT = 512 * 32
         #NUM_SAMPLES_PER_SCAN = NFFT*16
         NUM_BUFFERED_SWEEPS = 100
@@ -530,10 +531,16 @@ class hackrfCtrl(HackRf):
             iq = self.packed_bytes_to_iq(buf)
             iq = iq - np.mean(iq) #dc offset
             
-            PSD_BUFFER_REAL[i] = iq.real
-            PSD_BUFFER_IMAG[i] = iq.imag
+            try:
+                PSD_BUFFER_REAL[i] = iq.real
+                PSD_BUFFER_IMAG[i] = iq.imag
 
-            i += 1 
+            except Exception:
+                i = numBufferSweep + 1
+                error = True
+                #return PSD_BUFFER, self.error
+
+            i += 1  
 
         PSD_BUFFER = PSD_BUFFER_REAL + 1j*PSD_BUFFER_IMAG
         return PSD_BUFFER
