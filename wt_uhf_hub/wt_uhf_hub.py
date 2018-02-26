@@ -148,13 +148,14 @@ def dataStoreCheck():
     then save it to a file and save the file appropriately. '''
 def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0):
     global ENABLE_SD
+    #Error = False
     #Collect the data
     if internetflag:
         print("Use database perameters")
         center_frequency = int(Start_frequency + (sample_rate/2))
         
         data_pts = hackrf.setParameters(center_frequency, sample_rate)
-        iq = hackrf.hackrf_run(5)
+        iq, Error = hackrf.hackrf_run(5)
         
     else:
         print("Read config file on sd card")
@@ -164,57 +165,60 @@ def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0
         center_frequency = int(Start_frequency + (sample_rate/2))
                 
         data_pts = hackrf.setParameters(center_frequency, sample_rate)
-        iq = hackrf.hackrf_run(1)
+        iq, Error = hackrf.hackrf_run(1)
     
-    #Store data into file            
-    strname = str(time.strftime('%m|%d_%H|%M_', time.localtime()) + \
-    str(center_frequency/1e6) + 'e6')
-    
-    print(strname)
-    np.savez(strname, data_pts = data_pts, iq = iq)
-    
-    #Save file to storage or SD card
-    if internetflag:
-        storage_client = storage.Client.from_service_account_json(JSON_LOC)
+    if Error != True:
+        #Store data into file
+        hackrf.close()
+        strname = str(time.strftime('%m|%d_%H|%M_', time.localtime()) + \
+        str(center_frequency/1e6) + 'e6')
         
-        bucket = storage_client.get_bucket(BUCKET_NAME)
-                    
-        blob = bucket.blob(os.path.basename(strname + '.npz'))
-        blob.upload_from_filename(strname + '.npz')
-        confirmation = "File {} stored via Cloud".format(strname)
-        print(confirmation)
-        os.remove(strname + '.npz')
+        print(strname)
+        np.savez(strname, data_pts = data_pts, iq = iq)
         
-        #Request data from database
-        key_complete = client.key(KIND, ID_NAME)
-        tasks = client.get(key_complete)
-                
-        #Put properties of request into varaibles
-        request = tasks['Request']
-        minFreq = tasks['min_frequency']
-        maxFreq = tasks['max_frequency']
-        samprate= tasks['sample_rate']
-        incremFreq = tasks['increment_frequency']
-        
-        newfreq = incremFreq + samprate
-        
-        if newfreq >= maxFreq:
-            print("Setting increment frequency back to minimum frequency")
-            tasks['increment_frequency'] = minFreq
-        else:
-            tasks['increment_frequency'] = newfreq
-            print('Data Updated')
+        #Save file to storage or SD card
+        if internetflag:
+            storage_client = storage.Client.from_service_account_json(JSON_LOC)
             
-        client.put(tasks)
-    else:    
-        if ENABLE_SD:
-            writeToSD(strname)
+            bucket = storage_client.get_bucket(BUCKET_NAME)
+                        
+            blob = bucket.blob(os.path.basename(strname + '.npz'))
+            blob.upload_from_filename(strname + '.npz')
+            confirmation = "File {} stored via Cloud".format(strname)
+            print(confirmation)
+            os.remove(strname + '.npz')
+            
+            #Request data from database
+            key_complete = client.key(KIND, ID_NAME)
+            tasks = client.get(key_complete)
+                    
+            #Put properties of request into varaibles
+            request = tasks['Request']
+            minFreq = tasks['min_frequency']
+            maxFreq = tasks['max_frequency']
+            samprate= tasks['sample_rate']
+            incremFreq = tasks['increment_frequency']
+            
+            newfreq = incremFreq + samprate
+            
+            if newfreq >= maxFreq:
+                print("Setting increment frequency back to minimum frequency")
+                tasks['increment_frequency'] = minFreq
+            else:
+                tasks['increment_frequency'] = newfreq
+                print('Data Updated')
+                
+            client.put(tasks)
+        else:    
+            if ENABLE_SD:
+                writeToSD(strname)
         
-    hackrf.close()
-    
-    #For debugging out to UART
-    if DEBUG:
-        writeToUART(confirmation)
+        #For debugging out to UART
+        if DEBUG:
+            writeToUART(confirmation)
+    else:
+        hackrf.close()
+        print("I reported an error")
         
     return
         
