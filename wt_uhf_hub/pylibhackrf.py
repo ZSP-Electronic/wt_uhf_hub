@@ -281,7 +281,7 @@ class HackRf(object):
         self.is_open = False
         self.error = False
         if debug:
-            self.ser = serial.Serial(port = "/dev/ttyO4", baudrate=115200)
+            self.ser = serial.Serial(port = port, baudrate=baudrate)
             self.ser.close()
 
     def __del__(self):
