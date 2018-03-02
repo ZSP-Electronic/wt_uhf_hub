@@ -6,6 +6,7 @@ import os
 import numpy as np
 import copy 
 import time
+import serial 
 
 try:
     from itertools import izip
@@ -274,10 +275,14 @@ class HackRf(object):
     __ONE = 'HackRF ONE'
     NAME_LIST = [__JELLYBEAN__, __JAWBREAKER__, __ONE]
 
-    def __init__(self):
+    def __init__(self, debug=False, port="/dev/ttyO4", baudrate=115200):
         self.device = POINTER(hackrf_device)()
         self.callback = None
         self.is_open = False
+        self.error = False
+        if debug:
+            self.ser = serial.Serial(port = "/dev/ttyO4", baudrate=115200)
+            self.ser.close()
 
     def __del__(self):
         if self.is_open == True:
@@ -297,6 +302,10 @@ class HackRf(object):
         if ret == HackRfError.HACKRF_SUCCESS:
             self.is_open = True
             logger.debug('Successfully open HackRf device')
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully open HackRf device\n")
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('No Hack Rf Detected!')
@@ -306,6 +315,10 @@ class HackRf(object):
         if ret == HackRfError.HACKRF_SUCCESS:
             self.is_open = False
             logger.debug('Successfully close HackRf device')
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully closed HackRf device\n\n")
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('Failed to close!')
@@ -315,6 +328,10 @@ class HackRf(object):
         ret = libhackrf.hackrf_start_rx(self.device, self.callback, None)
         if ret == HackRfError.HACKRF_SUCCESS:
             logger.debug('Successfully start HackRf in Recieve Mode')
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully start HackRf in Recieve Mode\n")
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('Failed to start HackRf in Recieve Mode')
@@ -323,6 +340,10 @@ class HackRf(object):
         ret = libhackrf.hackrf_stop_rx(self.device)
         if ret == HackRfError.HACKRF_SUCCESS:
             logger.debug('Successfully stop HackRf in Recieve Mode')
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully stop HackRf in Recieve Mode\n")
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('Failed to stop HackRf in Recieve Mode')
@@ -368,6 +389,10 @@ class HackRf(object):
         ret = libhackrf.hackrf_set_freq(self.device, freq_hz)
         if ret == HackRfError.HACKRF_SUCCESS:
             logger.debug('Successfully set frequency with value [%d]', freq_hz)
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully set frequency with value {}\n".format(freq_hz))
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('Error setting frequency with value [%d]', freq_hz)
@@ -384,6 +409,10 @@ class HackRf(object):
         result = libhackrf.hackrf_set_lna_gain(self.device, value)
         if result == HackRfError.HACKRF_SUCCESS:
             logger.debug('Successfully set LNA gain to [%d]', value)
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully set LNA gain to {}\n".format(value))
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('Failed to set LNA gain to [%d]', value)
@@ -393,6 +422,10 @@ class HackRf(object):
         result = libhackrf.hackrf_set_vga_gain(self.device, value)
         if result == HackRfError.HACKRF_SUCCESS:
             logger.debug('Successfully set VGA gain to [%d]', value)
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully set VGA gain to {}\n".format(value))
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('Failed to set VGA gain to [%d]', value)
@@ -415,6 +448,10 @@ class HackRf(object):
         result =  libhackrf.hackrf_set_antenna_enable(self.device, val)
         if result == HackRfError.HACKRF_SUCCESS:
             logger.debug('Successfully set antenna_enable')
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully set antenna\n")
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
         else:
             logger.error('Failed to set antenna_enable')
@@ -426,6 +463,10 @@ class HackRf(object):
         else:
             logger.debug(
                 'Successfully set Sample Rate with Frequency [%d]', freq)
+            self.ser.open()
+            if self.ser.isOpen():
+                self.ser.write("DEBUG:HackRf Core:Successfully set Sample Rate with Frequency {}\n".format(freq))
+            self.ser.close()
             return HackRfError.HACKRF_SUCCESS
 
     def set_amp_enable(self, value):
@@ -540,7 +581,7 @@ class hackrfCtrl(HackRf):
                 error = True
                 #return PSD_BUFFER, self.error
 
-            i += 1  
+            i += 1 
 
         PSD_BUFFER = PSD_BUFFER_REAL + 1j*PSD_BUFFER_IMAG
-        return PSD_BUFFER
+        return PSD_BUFFER, error
