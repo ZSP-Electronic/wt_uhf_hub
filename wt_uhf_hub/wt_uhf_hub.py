@@ -171,7 +171,8 @@ def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0
         #Store data into file
         hackrf.close()
         strname = str(time.strftime('%m|%d_%H|%M_', time.localtime()) + \
-        str(center_frequency/1e6) + 'e6')
+        str(Start_frequency/1e6) + 'e6|' + \
+        str((Start_frequency + sample_rate)/1e6) + 'e6')
         
         print(strname)
         np.savez(strname, data_pts = data_pts, iq = iq)
