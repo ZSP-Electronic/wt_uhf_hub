@@ -30,24 +30,25 @@ timer1 = 0
 timer2 = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
+BASE_PATH = '/tmp/'
 
 
 # PUT CREDENTIALS BELOW!
 # Put JSON file name here include ./ at beginning if in same directory as this program:
-JSON_LOC = '<JSON file name>'
+JSON_LOC = './Hello World-bdfbdf4aa8d5.json'
 #Put chip detect pin name here:
 CD_PIN = "<PIN NAME>"
 # Put bucket name here for Google Storage:
-BUCKET_NAME = 'BUCKET NAME'
+BUCKET_NAME = 'second_test_bucket123'
 # Put names for Google Datastore here:
-KIND = '<KIND NAME>'
-ID_NAME = '<ID_NAME>'
+KIND = 'mylist'
+ID_NAME = 'UHF_Hub_test'
+ADV_NAME = 'advanceSetting'
 # Put UART port names here
-UART_NAME = "<UART PORT>"
-UART_PORT = "/dev/ttyO<UART NUMBER>"
+UART_PORT = '/dev/ttyO4'
 
 DEBUG = False
-ENABLE_SD = True
+ENABLE_SD = False
 request = False
 #InternetFlag = False
 
@@ -175,7 +176,7 @@ def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0
         str((Start_frequency + sample_rate)/1e6) + 'e6')
         
         print(strname)
-        np.savez(strname, data_pts = data_pts, iq = iq)
+        np.savez_compressed(os.path.join(BASE_PATH, strname), data_pts = data_pts, iq = iq)
         
         #Save file to storage or SD card
         if internetflag:
@@ -183,11 +184,11 @@ def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0
             
             bucket = storage_client.get_bucket(BUCKET_NAME)
                         
-            blob = bucket.blob(os.path.basename(strname + '.npz'))
-            blob.upload_from_filename(strname + '.npz')
+            blob = bucket.blob(os.path.basename(BASE_PATH + strname + '.npz'))
+            blob.upload_from_filename(BASE_PATH + strname + '.npz')
             confirmation = "File {} stored via Cloud".format(strname)
             print(confirmation)
-            os.remove(strname + '.npz')
+            os.remove(BASE_PATH + strname + '.npz')
             
             #Request data from database
             key_complete = client.key(KIND, ID_NAME)
@@ -212,7 +213,7 @@ def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0
             client.put(tasks)
         else:    
             if ENABLE_SD:
-                writeToSD(strname)
+                writeToSD(BASE_PATH + strname)
         
         #For debugging out to UART
         if DEBUG:
@@ -245,7 +246,7 @@ def writeToSD(file):
     print("Store to sd card")
     confirmation = "File {} stored via SD card".format(file)
     print(confirmation)
-    os.remove(file + '.npz')
+    os.remove(BASE_PATH + file + '.npz')
 
 
 ''' Function to write string to UART '''
