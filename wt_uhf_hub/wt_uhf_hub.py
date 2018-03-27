@@ -31,25 +31,57 @@ timer2 = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
 BASE_PATH = '/tmp/'
-
-
-# PUT CREDENTIALS BELOW!
-# Put JSON file name here include ./ at beginning if in same directory as this program:
-# Put UART port names here
+SDDIR = '/media/card/'
+SDSAVEDFILESDIR = '/media/card/savedFiles/'
+CREDDIR = '/media/card/Credentials.txt'
 UART_PORT = '/dev/ttyO4'
 
 DEBUG = False
-ENABLE_SD = False
+ENABLE_SD = True
 request = False
 #InternetFlag = False
 
+if ENABLE_SD:
+    if not os.path.exists(CREDDIR):
+        credFile = open(CREDDIR, 'w')
+        credFile.write("JSON File Name:\n")
+        credFile.write("Card Detect Pin:\n")
+        credFile.write("Bucket Name:\n")
+        credFile.write("Datastore Kind Name:\n")
+        credFile.write("Datastore ID Name:\n")
+        credFile.write("Datastore Adv ID Name:\n")
+        credFile.close()
+        
+        print("Output to LCD: Credentials file created.\
+        Input credentials and restart")
+        while True:
+            pass
+    else:
+        f = open(CREDDIR, 'r')
+        information = f.readlines()
+        infoArray = np.empty(6, dtype='U256')
+        for index, lines in enumerate(information):
+            tempinfo = lines.split(":")
+            infoArray[index] = tempinfo[1].replace("\n", '')
+    
+        JSON_LOC = SDDIR + str(infoArray[0])
+        CD_PIN = str(infoArray[1])
+        BUCKET_NAME = str(infoArray[2])
+        KIND = str(infoArray[3])
+        ID_NAME = str(infoArray[4])
+        ADV_NAME = str(infoArray[5])
 
 
 client = datastore.Client.from_service_account_json(JSON_LOC)
-hackrf = hackrfCtrl()
+hackrf = hackrfCtrl(DEBUG)
 # SD card object declaration
 if ENABLE_SD:
     GPIO.setup(CD_PIN, GPIO.IN)
+    
+if DEBUG:
+    print("Importing UART")
+    ser = serial.Serial(port=UART_PORT, baudrate=115200)
+    ser.close()
 
 ''' This is the main function that runs on startup. First determines if sd card
     is inserted so device can work. Then runs a request from the Datastore 
@@ -59,13 +91,8 @@ def main():
     global timer1, timer2
     
     print("Start Main")
-    
     if DEBUG:
-        import Adafruit_BBIO.UART as UART
-        print("Importing UART")
-        UART.setup(UART_NAME)
-        ser = serial.Serial(port = UART_PORT, baudrate=9600)
-        ser.close()
+        writeToUARTln('Start Main')
         
     timer1 = time.time()
     timer2 = time.time()
@@ -73,10 +100,10 @@ def main():
     while True:
         #TODO Fix GPIO for real sd card CD pin
         if ENABLE_SD:
-            if GPIO.input(CD_PIN) == False:
+            if not GPIO.input(CD_PIN):
                 dataStoreCheck()
             else:
-                print('Show error')
+                print('Show error to LCD')
                 time.sleep(1)
         else:
             dataStoreCheck()
@@ -96,6 +123,8 @@ def dataStoreCheck():
         InternetFlag = InternetCheck()
         if InternetFlag:
             print('Requesting Data')
+            if DEBUG:
+                writeToUARTln('Requesting Data from Datastore')
                         
             #Request data from database
             key_complete = client.key(KIND, ID_NAME)
@@ -104,31 +133,56 @@ def dataStoreCheck():
             #Put properties of request into varaibles
             request = tasks['Request']
             minFreq = tasks['min_frequency']
+            incremFreq = tasks['increment_frequency']
             maxFreq = tasks['max_frequency']
             samprate= tasks['sample_rate']
-            incremFreq = tasks['increment_frequency']
                         
-            data = [request, minFreq, incremFreq, maxFreq, samprate]
-            print(data)
+            data1 = [request, minFreq, incremFreq, maxFreq, samprate]
+            print(data1)
+            if DEBUG:
+                for element in data1:
+                    writeToUART(element)
+                writeToUART('\n')
                         
             #If there was a request collect hackrf data immediately
             if request == True:
-                runHackrf(InternetFlag, incremFreq, maxFreq, samprate)
+                runHackrf(InternetFlag, minFreq, incremFreq, maxFreq, samprate)
                 timer2 = time.time()
                             
             timer1 = time.time()
         else:
             '''This is for if not connected to internet. Nothing much
                to do besides nothing '''
-            print("No Internet == Do Nothing")
+            print("No Internet == Read SD card")
+            if DEBUG:
+                writeToUARTln('Requesting Data from SD config file')
+            
+            params = []
+            with open(SDDIR + 'config.txt', 'r') as configFile:
+                for line in configFile:
+                    numbers_float = map(float, line.split(', '))
+                    for number in numbers_float:
+                        params.append(number)
+
+            minFreq = params[1]
+            incremFreq = params[2]
+            maxFreq = params[3]
+            samprate= params[4]
+
+            data2 = [minFreq, incremFreq, maxFreq, samprate]
+            print(data2)
+            if DEBUG:
+                for element in data2:
+                    writeToUART(element)
+                writeToUART('\n')
+            
             timer1 = time.time()
                         
     ''' Second "if" statement is used to run the hackrf. The global 
         variables allow the database to set them and be placed into
         this function. '''
     if time.time() - timer2 > TIMER2_TIME:
-        print(InternetFlag)
-        runHackrf(InternetFlag, incremFreq, maxFreq, samprate)
+        runHackrf(InternetFlag, minFreq, incremFreq, maxFreq, samprate)
                     
         timer1 = time.time()
         timer2 = time.time()
@@ -138,48 +192,47 @@ def dataStoreCheck():
     then use the parameters passed from the database otherwise read the 
     parameters from the sd card. Run the hackrf the appropriate amount of times
     then save it to a file and save the file appropriately. '''
-def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0):
+def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequency, sample_rate):
     global ENABLE_SD
     #Error = False
     #Collect the data
-    if internetflag:
-        print("Use database perameters")
-        center_frequency = int(Start_frequency + (sample_rate/2))
+    center_frequency = int(Increment_frequency + (sample_rate/2))
         
-        data_pts = hackrf.setParameters(center_frequency, sample_rate)
-        iq, Error = hackrf.hackrf_run(5)
-        
-    else:
-        print("Read config file on sd card")
-        Start_frequency = 105e6
-        Finish_frequency = 108e6
-        sample_rate = 2.048e6
-        center_frequency = int(Start_frequency + (sample_rate/2))
-                
-        data_pts = hackrf.setParameters(center_frequency, sample_rate)
-        iq, Error = hackrf.hackrf_run(1)
+    data_pts = hackrf.setParameters(center_frequency, sample_rate)
+    iq, Error = hackrf.hackrf_run(5)
+    hackrf.close()
     
-    if Error != True:
+    if not Error:
         #Store data into file
-        hackrf.close()
         strname = str(time.strftime('%m|%d_%H|%M_', time.localtime()) + \
         str(Start_frequency/1e6) + 'e6|' + \
         str((Start_frequency + sample_rate)/1e6) + 'e6')
         
         print(strname)
+        if DEBUG:
+            writeToUARTln(strname)
+        ''' Save npz file in tmp dir '''
         np.savez_compressed(os.path.join(BASE_PATH, strname), data_pts = data_pts, iq = iq)
+        strname = strname + '.npz'
+        
+        newInternetFlag = InternetCheck()
         
         #Save file to storage or SD card
-        if internetflag:
+        if newInternetFlag:
             storage_client = storage.Client.from_service_account_json(JSON_LOC)
             
             bucket = storage_client.get_bucket(BUCKET_NAME)
                         
-            blob = bucket.blob(os.path.basename(BASE_PATH + strname + '.npz'))
-            blob.upload_from_filename(BASE_PATH + strname + '.npz')
+            blob = bucket.blob(os.path.basename(BASE_PATH + strname))
+            blob.upload_from_filename(BASE_PATH + strname)
             confirmation = "File {} stored via Cloud".format(strname)
             print(confirmation)
-            os.remove(BASE_PATH + strname + '.npz')
+            if DEBUG:
+                writeToUARTln(confirmation)
+            if ENABLE_SD:
+                os.rename(BASE_PATH + strname, SDSAVEDFILESDIR + strname)
+            else:
+                os.remove(BASE_PATH + strname)
             
             #Request data from database
             key_complete = client.key(KIND, ID_NAME)
@@ -196,21 +249,48 @@ def runHackrf(internetflag, Start_frequency=0, Finish_frequency=0, sample_rate=0
             
             if newfreq >= maxFreq:
                 print("Setting increment frequency back to minimum frequency")
+                if DEBUG:
+                    writeToUARTln("Setting increment frequency back to minimum frequency")
                 tasks['increment_frequency'] = minFreq
             else:
                 tasks['increment_frequency'] = newfreq
                 print('Data Updated')
+                if DEBUG:
+                    writeToUARTln("Data Updated")
                 
             client.put(tasks)
         else:    
             if ENABLE_SD:
-                writeToSD(BASE_PATH + strname)
-        
-        #For debugging out to UART
-        if DEBUG:
-            writeToUART(confirmation)
+                os.rename(BASE_PATH + strname, SDSAVEDFILESDIR + strname)
+                confirmation = "File {} stored via SD card".format(strname)
+                print(confirmation)
+                if DEBUG:
+                    writeToUARTln(confirmation)
+                infoArray = np.empty(6)
+                newfreq = Increment_frequency + sample_rate
+                infoArray[0] = 0
+                infoArray[1] = 420e6
+                infoArray[3] = 512e6
+                inforArray[4] = 2.5e6
+                inforArray[5] = 0
+                
+                if newfreq >= Finish_frequency:
+                    print("Setting increment frequency back to minimum frequency")
+                    if DEBUG:
+                        writeToUARTln("Setting increment frequency back to minimum frequency")
+                    infoArray[2] = Start_frequency
+                else:
+                    infoArray[2] = newfreq
+                    print('Data Updated')
+                    if DEBUG:
+                        writeToUARTln("Data Updated on SD card")
+                        
+                writeFile = open(SDDIR + 'config.txt', 'w')
+                writeFile.write(infoArray)
+                writeFile.close()
+            else:
+                pass
     else:
-        hackrf.close()
         print("I reported an error")
         
     return
@@ -231,20 +311,21 @@ def InternetCheck():
         print("Not connected to internet")
         return False
         
-        
-''' Function to store file to sd card '''
-def writeToSD(file):
-    print("Store to sd card")
-    confirmation = "File {} stored via SD card".format(file)
-    print(confirmation)
-    os.remove(BASE_PATH + file + '.npz')
-
 
 ''' Function to write string to UART '''
 def writeToUART(message):
     ser.open()
     if ser.isOpen():
-        ser.write(message)
+        ser.write(str(message))
+        #print("Serial is open!")
+    ser.close()
+
+
+''' Same as write to UART except adds a carriage return '''
+def writeToUARTln(message):
+    ser.open()
+    if ser.isOpen():
+        ser.write(str(message) + '\n')
         #print("Serial is open!")
     ser.close()
 
