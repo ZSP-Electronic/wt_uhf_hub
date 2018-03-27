@@ -35,15 +35,6 @@ BASE_PATH = '/tmp/'
 
 # PUT CREDENTIALS BELOW!
 # Put JSON file name here include ./ at beginning if in same directory as this program:
-JSON_LOC = './Hello World-bdfbdf4aa8d5.json'
-#Put chip detect pin name here:
-CD_PIN = "<PIN NAME>"
-# Put bucket name here for Google Storage:
-BUCKET_NAME = 'second_test_bucket123'
-# Put names for Google Datastore here:
-KIND = 'mylist'
-ID_NAME = 'UHF_Hub_test'
-ADV_NAME = 'advanceSetting'
 # Put UART port names here
 UART_PORT = '/dev/ttyO4'
 
