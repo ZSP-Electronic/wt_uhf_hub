@@ -30,7 +30,7 @@ timer1 = 0
 timer2 = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
-BASE_PATH = '/tmp/'
+#BASE_PATH = '/tmp/'
 SDDIR = '/media/card/'
 SDSAVEDFILESDIR = '/media/card/savedFiles/'
 CREDDIR = '/media/card/Credentials.txt'
@@ -200,39 +200,42 @@ def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequen
         
     data_pts = hackrf.setParameters(center_frequency, sample_rate)
     iq, Error = hackrf.hackrf_run(5)
-    hackrf.close()
     
     if not Error:
         #Store data into file
-        strname = str(time.strftime('%m|%d_%H|%M_', time.localtime()) + \
-        str(Start_frequency/1e6) + 'e6|' + \
+        strname = str(time.strftime('%m-%d_%H-%M_', time.localtime()) + \
+        str(Start_frequency/1e6) + 'e6-' + \
         str((Start_frequency + sample_rate)/1e6) + 'e6')
         
-        print(strname)
         if DEBUG:
             writeToUARTln(strname)
-        ''' Save npz file in tmp dir '''
-        np.savez_compressed(os.path.join(BASE_PATH, strname), data_pts = data_pts, iq = iq)
+        else:
+            print(strname)
+        
+        if internetflag:
+            ''' Save npz file in tmp dir '''
+            np.savez_compressed(strname, data_pts = data_pts, iq = iq)
+        else:
+            np.savez_compressed(os.path.join(SDSAVEDFILESDIR, strname), data_pts = data_pts, iq = iq)
+            
         strname = strname + '.npz'
         
         newInternetFlag = InternetCheck()
         
         #Save file to storage or SD card
         if newInternetFlag:
+            hackrf.close()
             storage_client = storage.Client.from_service_account_json(JSON_LOC)
             
             bucket = storage_client.get_bucket(BUCKET_NAME)
                         
-            blob = bucket.blob(os.path.basename(BASE_PATH + strname))
-            blob.upload_from_filename(BASE_PATH + strname)
+            blob = bucket.blob(os.path.basename(strname))
+            blob.upload_from_filename(strname)
             confirmation = "File {} stored via Cloud".format(strname)
             print(confirmation)
             if DEBUG:
                 writeToUARTln(confirmation)
-            if ENABLE_SD:
-                os.rename(BASE_PATH + strname, SDSAVEDFILESDIR + strname)
-            else:
-                os.remove(BASE_PATH + strname)
+            os.remove(strname)
             
             #Request data from database
             key_complete = client.key(KIND, ID_NAME)
@@ -259,9 +262,9 @@ def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequen
                     writeToUARTln("Data Updated")
                 
             client.put(tasks)
-        else:    
+        else:
+            hackrf.close()
             if ENABLE_SD:
-                os.rename(BASE_PATH + strname, SDSAVEDFILESDIR + strname)
                 confirmation = "File {} stored via SD card".format(strname)
                 print(confirmation)
                 if DEBUG:
@@ -271,8 +274,8 @@ def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequen
                 infoArray[0] = 0
                 infoArray[1] = 420e6
                 infoArray[3] = 512e6
-                inforArray[4] = 2.5e6
-                inforArray[5] = 0
+                infoArray[4] = 2.5e6
+                infoArray[5] = 0
                 
                 if newfreq >= Finish_frequency:
                     print("Setting increment frequency back to minimum frequency")
@@ -286,7 +289,9 @@ def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequen
                         writeToUARTln("Data Updated on SD card")
                         
                 writeFile = open(SDDIR + 'config.txt', 'w')
-                writeFile.write(infoArray)
+                writeFile.write(str(infoArray[0]) + ', ' + str(infoArray[1]) + 
+                ', ' + str(infoArray[2]) + ', ' + str(infoArray[3]) + ', ' + 
+                str(infoArray[4]) + ', ' + str(infoArray[5]))
                 writeFile.close()
             else:
                 pass
