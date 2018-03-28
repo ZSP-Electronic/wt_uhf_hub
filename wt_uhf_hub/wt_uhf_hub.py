@@ -204,8 +204,8 @@ def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequen
     if not Error:
         #Store data into file
         strname = str(time.strftime('%m-%d_%H-%M_', time.localtime()) + \
-        str(Start_frequency/1e6) + 'e6-' + \
-        str((Start_frequency + sample_rate)/1e6) + 'e6')
+        str(Increment_frequency/1e6) + 'e6-' + \
+        str((Increment_frequency + sample_rate)/1e6) + 'e6')
         
         if DEBUG:
             writeToUARTln(strname)
