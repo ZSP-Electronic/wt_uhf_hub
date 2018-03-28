@@ -558,7 +558,7 @@ class hackrfCtrl(HackRf):
         
     def hackrf_run(self, numBufferSweep=1):
         error = False
-        self.NFFT = 512 * 32
+        self.NFFT = 512 * 16
         #NUM_SAMPLES_PER_SCAN = NFFT*16
         NUM_BUFFERED_SWEEPS = 100
         
@@ -577,7 +577,7 @@ class hackrfCtrl(HackRf):
         while i < numBufferSweep:
             tempbuf = []
             self.start_rx_mode(self.callback_fun)
-            time.sleep(.5)
+            time.sleep(.75)
             self.stop_rx_mode()
             iq = self.packed_bytes_to_iq(buf)
             iq = iq - np.mean(iq) #dc offset
