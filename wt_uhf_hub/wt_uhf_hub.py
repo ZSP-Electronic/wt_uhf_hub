@@ -213,8 +213,8 @@ def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequen
             print(strname)
         
         if internetflag:
-            ''' Save npz file in tmp dir '''
-            np.savez_compressed(strname, data_pts = data_pts, iq = iq)
+            ''' Save npz file '''
+            np.savez_compressed(os.path.join(SDSAVEDFILESDIR, strname), data_pts = data_pts, iq = iq)
         else:
             np.savez_compressed(os.path.join(SDSAVEDFILESDIR, strname), data_pts = data_pts, iq = iq)
             
@@ -229,19 +229,20 @@ def runHackrf(internetflag, Start_frequency, Increment_frequency, Finish_frequen
             
             bucket = storage_client.get_bucket(BUCKET_NAME)
                         
-            blob = bucket.blob(os.path.basename(strname))
-            blob.upload_from_filename(strname)
+            blob = bucket.blob(os.path.basename(SDSAVEDFILESDIR + strname))
+            blob.upload_from_filename(SDSAVEDFILESDIR + strname)
             confirmation = "File {} stored via Cloud".format(strname)
             print(confirmation)
             if DEBUG:
                 writeToUARTln(confirmation)
-            os.remove(strname)
+            #os.remove(strname)
+            os.path.join(SDSAVEDFILESDIR, strname)
             
             #Request data from database
             key_complete = client.key(KIND, ID_NAME)
             tasks = client.get(key_complete)
                     
-            #Put properties of request into varaibles
+            #Put properties of request into varibles
             request = tasks['Request']
             minFreq = tasks['min_frequency']
             maxFreq = tasks['max_frequency']
