@@ -532,8 +532,8 @@ class hackrfCtrl(HackRf):
     def setParameters(self, center_freq, sample_rate, lna = 16, vga = 20):
         self.center_freq = int(center_freq)
         self.sample_rate = int(sample_rate)
-        self.lna = lna
-        self.vga = vga
+        self.lna = int(lna)
+        self.vga = int(vga)
         self.setup()
         self.set_freq(self.center_freq)
         self.set_sample_rate(self.sample_rate)
