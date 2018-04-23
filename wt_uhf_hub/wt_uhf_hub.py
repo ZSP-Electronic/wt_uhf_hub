@@ -117,6 +117,9 @@ else:
 
 hackrf = hackrfCtrl(DEBUG)
 lcd.clear()
+
+GPIO.setup("USR3", GPIO.OUT)
+GPIO.output("USR3", GPIO.LOW)
 # SD card object declaration
 if ENABLE_SD:
     GPIO.setup(CD_PIN, GPIO.IN)
@@ -137,7 +140,7 @@ def main():
         writeToUARTln('Start Main')
     else:
         print("Start Main")
-        
+    
     timer1 = time.time()
     timer2 = time.time()
     
@@ -165,6 +168,7 @@ def dataStoreCheck():
     time and if connected to internet request from Datastore. '''
     if time.time() - timer1 > TIMER1_TIME:
         InternetFlag = InternetCheck()
+        GPIO.output("USR3", GPIO.HIGH)
         if InternetFlag:
             lcd.clearRow(1)
             lcd.move_to(0,1)
@@ -255,7 +259,7 @@ def dataStoreCheck():
         this function. '''
     if time.time() - timer2 > TIMER2_TIME:
         runHackrf(InternetFlag, data)
-                    
+        GPIO.output("USR3", GPIO.LOW)            
         timer1 = time.time()
         timer2 = time.time()
 
