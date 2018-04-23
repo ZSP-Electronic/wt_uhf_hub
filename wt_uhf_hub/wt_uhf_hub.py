@@ -19,6 +19,7 @@ import serial
 import os
 #import timeit 
 import numpy as np
+from google.cloud import storage
 
 def introScreen():
     ''' Intro Screen '''
@@ -35,19 +36,18 @@ def mainScreen():
     # lcd.custom_char(1,customChar.RecordSym('offright'))
     # lcd.custom_char(2,customChar.RecordSym('onleft'))
     # lcd.custom_char(3,customChar.RecordSym('onright'))
-    lcd.move_to(0,0)
-    lcd.putchar(chr(0))
-    lcd.move_to(1,0)
-    lcd.putchar(chr(1))
+    # lcd.move_to(0,0)
+    # lcd.putchar(chr(0))
+    # lcd.move_to(1,0)
+    # lcd.putchar(chr(1))
     lcd.move_to(5, 0)
     lcd.putstr(time.strftime('%m/%d %H:%M', time.localtime()))
 
 
-# LCD_I2C_ADDR = 0x3d
-# lcd = I2cLcd(1, LCD_I2C_ADDR, 2, 16)
-# introScreen()
+LCD_I2C_ADDR = 0x3f
+lcd = I2cLcd(1, LCD_I2C_ADDR, 2, 16)
+introScreen()
 
-from google.cloud import storage
 from google.cloud import datastore
 
 #Initialize global variables to be used 
@@ -115,9 +115,8 @@ else:
     pass
 
 
-client = datastore.Client.from_service_account_json(JSON_LOC)
 hackrf = hackrfCtrl(DEBUG)
-#lcd.clear()
+lcd.clear()
 # SD card object declaration
 if ENABLE_SD:
     GPIO.setup(CD_PIN, GPIO.IN)
@@ -143,16 +142,15 @@ def main():
     timer2 = time.time()
     
     while True:
-        #TODO Fix GPIO for real sd card CD pin
         if ENABLE_SD:
             if not GPIO.input(CD_PIN):
-                #mainScreen()
+                mainScreen()
                 dataStoreCheck()
             else:
                 print('Show error to LCD')
                 time.sleep(1)
         else:
-            #mainScreen()
+            mainScreen()
             dataStoreCheck()
             
             
@@ -168,9 +166,9 @@ def dataStoreCheck():
     if time.time() - timer1 > TIMER1_TIME:
         InternetFlag = InternetCheck()
         if InternetFlag:
-            # lcd.clearRow(1)
-            # lcd.move_to(0,1)
-            # lcd.putstr('Requesting Data')
+            lcd.clearRow(1)
+            lcd.move_to(0,1)
+            lcd.putstr('Requesting Data')
             
             if DEBUG:
                 writeToUARTln('Requesting Data from Datastore')
@@ -179,6 +177,7 @@ def dataStoreCheck():
 
                         
             #Request data from database
+            client = datastore.Client.from_service_account_json(JSON_LOC)
             key_complete = client.key(KIND, ID_NAME)
             tasks = client.get(key_complete)
                         
@@ -194,9 +193,9 @@ def dataStoreCheck():
             numscans = tasks['Scans']
             data = [minFreq, incremFreq, maxFreq, samprate, lna, vga, numscans]
             
-            # lcd.clearRow(1)
-            # lcd.move_to(0,1)
-            # lcd.putstr('{} to {}'. format(incremFreq, incremFreq + samprate))
+            lcd.clearRow(1)
+            lcd.move_to(0,1)
+            lcd.putstr('{} to {}'. format(incremFreq, incremFreq + samprate))
             
             if DEBUG:
                 for element in data:
@@ -214,9 +213,9 @@ def dataStoreCheck():
         else:
             '''This is for if not connected to internet. Nothing much
                to do besides nothing '''
-            # lcd.clearRow(1)
-            # lcd.move_to(0,1)
-            # lcd.putstr('Requesting Data')
+            lcd.clearRow(1)
+            lcd.move_to(0,1)
+            lcd.putstr('Requesting Data')
             
             if DEBUG:
                 writeToUARTln('Requesting Data from SD config file')
@@ -237,9 +236,10 @@ def dataStoreCheck():
 
             data = [minFreq, incremFreq, maxFreq, samprate]
             
-            # lcd.clearRow(1)
-            # lcd.move_to(0,1)
-            # lcd.putstr('{} to {}'. format(incremFreq, incremFreq + samprate))
+            lcd.clearRow(1)
+            lcd.move_to(0,1)
+            lcd.putstr('{} to {}'. format(incremFreq/1.0e6, 
+            (incremFreq/1.0e6) + (samprate/1.0e6)))
             
             if DEBUG:
                 for element in data:
@@ -268,10 +268,10 @@ def runHackrf(internetflag, dataParams=[]):
     global ENABLE_SD
     
     ''' Start of Hackrf Func '''
-    # lcd.move_to(0,0)
-    # lcd.putchar(chr(2))
-    # lcd.move_to(1,0)
-    # lcd.putchar(chr(3))
+    lcd.move_to(0,0)
+    lcd.putchar(chr(2))
+    lcd.move_to(1,0)
+    lcd.putchar(chr(3))
     #Error = False
     #Collect the data
     if internetflag:
@@ -291,13 +291,13 @@ def runHackrf(internetflag, dataParams=[]):
     iq, Error = hackrf.hackrf_run(scans)
     
     ''' End of Hackrf Func '''
-    # lcd.clearRow(1)
-    # # lcd.move_to(0,0)
-    # # lcd.putchar(chr(0))
-    # # lcd.move_to(1,0)
-    # # lcd.putchar(chr(1))
-    # lcd.move_to(0,1)
-    # lcd.putstr('Record Complete')
+    lcd.clearRow(1)
+    # lcd.move_to(0,0)
+    # lcd.putchar(chr(0))
+    # lcd.move_to(1,0)
+    # lcd.putchar(chr(1))
+    lcd.move_to(0,1)
+    lcd.putstr('Record Complete')
     
     if not Error:
         ''' Store data to file name '''
@@ -339,6 +339,7 @@ def runHackrf(internetflag, dataParams=[]):
             os.path.join(SDSAVEDFILESDIR, strname)
             
             #Request data from database
+            client = datastore.Client.from_service_account_json(JSON_LOC)
             key_complete = client.key(KIND, ID_NAME)
             tasks = client.get(key_complete)
                     
@@ -364,12 +365,12 @@ def runHackrf(internetflag, dataParams=[]):
                     print('Data Updated')
 
             client.put(tasks)
-            # ''' Uploading ''' 
-            # lcd.clearRow(1)
-            # lcd.move_to(0,1)
-            # lcd.putstr('Upload Complete')
-            # time.sleep(2)
-            # lcd.clearRow(1)
+            ''' Uploading ''' 
+            lcd.clearRow(1)
+            lcd.move_to(0,1)
+            lcd.putstr('Upload Complete')
+            time.sleep(2)
+            lcd.clearRow(1)
         else:
             hackrf.close()
             if ENABLE_SD:
@@ -404,12 +405,12 @@ def runHackrf(internetflag, dataParams=[]):
                 ', ' + str(infoArray[2]) + ', ' + str(infoArray[3]) + ', ' + 
                 str(infoArray[4]) + ', ' + str(infoArray[5]))
                 writeFile.close()
-                # ''' Uploading ''' 
-                # lcd.clearRow(1)
-                # lcd.move_to(0,1)
-                # lcd.putstr('Upload Complete')
-                # time.sleep(2)
-                # lcd.clearRow(1)
+                ''' Uploading ''' 
+                lcd.clearRow(1)
+                lcd.move_to(0,1)
+                lcd.putstr('Upload Complete')
+                time.sleep(2)
+                lcd.clearRow(1)
             else:
                 pass
     else:
