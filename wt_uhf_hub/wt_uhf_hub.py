@@ -32,19 +32,19 @@ def introScreen():
 
 def mainScreen():
     ''' Main Screen '''
-    # lcd.custom_char(0,customChar.RecordSym('offleft'))
-    # lcd.custom_char(1,customChar.RecordSym('offright'))
-    # lcd.custom_char(2,customChar.RecordSym('onleft'))
-    # lcd.custom_char(3,customChar.RecordSym('onright'))
-    # lcd.move_to(0,0)
-    # lcd.putchar(chr(0))
-    # lcd.move_to(1,0)
-    # lcd.putchar(chr(1))
+    lcd.custom_char(0,customChar.RecordSym('offleft'))
+    lcd.custom_char(1,customChar.RecordSym('offright'))
+    lcd.custom_char(2,customChar.RecordSym('onleft'))
+    lcd.custom_char(3,customChar.RecordSym('onright'))
+    lcd.move_to(0,0)
+    lcd.putchar(chr(0))
+    lcd.move_to(1,0)
+    lcd.putchar(chr(1))
     lcd.move_to(5, 0)
     lcd.putstr(time.strftime('%m/%d %H:%M', time.localtime()))
 
 
-LCD_I2C_ADDR = 0x3f
+LCD_I2C_ADDR = 0x3d
 lcd = I2cLcd(1, LCD_I2C_ADDR, 2, 16)
 introScreen()
 
@@ -64,55 +64,56 @@ SDDIR = '/media/card/'
 SDSAVEDFILESDIR = '/media/card/savedFiles/'
 CREDDIR = '/media/card/Credentials.txt'
 UART_PORT = '/dev/ttyO4'
+CD_PIN = 'P2_35'
 
 DEBUG = False
 ENABLE_SD = True
 request = False
-#InternetFlag = False
 
 
 ''' Section to detect if Credentials file exists. if not it creates it'''
-if ENABLE_SD:
-    if not os.path.exists(CREDDIR):
-        credFile = open(CREDDIR, 'w')
-        credFile.write("JSON File Name:\n")
-        credFile.write("Card Detect Pin:\n")
-        credFile.write("Bucket Name:\n")
-        credFile.write("Datastore Kind Name:\n")
-        credFile.write("Datastore ID Name:\n")
-        credFile.write("Datastore Adv ID Name:\n")
-        credFile.close()
+def fileCheck():
+    if ENABLE_SD:
+        if not os.path.exists(CREDDIR):
+            credFile = open(CREDDIR, 'w')
+            credFile.write("JSON File Name:\n")
+            credFile.write("Card Detect Pin:\n")
+            credFile.write("Bucket Name:\n")
+            credFile.write("Datastore Kind Name:\n")
+            credFile.write("Datastore ID Name:\n")
+            credFile.write("Datastore Adv ID Name:\n")
+            credFile.close()
+                
+            # print("Output to LCD: Credentials file created.\
+            # Input credentials and restart")
+            while True:
+                lcd.move_to(0,0)
+                lcd.putstr('Credential File')
+                lcd.move_to(1,4)
+                lcd.putstr('Created.')
+                time.sleep(5)
+                lcd.clear()
+                lcd.move_to(0,0)
+                lcd.putstr('Input credential')
+                lcd.move_to(1,0)
+                lcd.putstr('and Restart')
+                time.sleep(5)
+        else:
+            f = open(CREDDIR, 'r')
+            information = f.readlines()
+            infoArray = np.empty(6, dtype='U256')
+            for index, lines in enumerate(information):
+                tempinfo = lines.split(":")
+                infoArray[index] = tempinfo[1].replace("\n", '')
             
-        # print("Output to LCD: Credentials file created.\
-        # Input credentials and restart")
-        while True:
-            lcd.move_to(0,0)
-            lcd.putstr('Credential File')
-            lcd.move_to(1,4)
-            lcd.putstr('Created.')
-            time.sleep(5)
-            lcd.clear()
-            lcd.move_to(0,0)
-            lcd.putstr('Input credential')
-            lcd.move_to(1,0)
-            lcd.putstr('and Restart')
-            time.sleep(5)
+            JSON_LOC = SDDIR + str(infoArray[0])
+            #CD_PIN = str(infoArray[1])
+            BUCKET_NAME = str(infoArray[2])
+            KIND = str(infoArray[3])
+            ID_NAME = str(infoArray[4])
+            ADV_NAME = str(infoArray[5])
     else:
-        f = open(CREDDIR, 'r')
-        information = f.readlines()
-        infoArray = np.empty(6, dtype='U256')
-        for index, lines in enumerate(information):
-            tempinfo = lines.split(":")
-            infoArray[index] = tempinfo[1].replace("\n", '')
-        
-        JSON_LOC = SDDIR + str(infoArray[0])
-        CD_PIN = str(infoArray[1])
-        BUCKET_NAME = str(infoArray[2])
-        KIND = str(infoArray[3])
-        ID_NAME = str(infoArray[4])
-        ADV_NAME = str(infoArray[5])
-else:
-    pass
+        pass
 
 
 hackrf = hackrfCtrl(DEBUG)
@@ -143,15 +144,22 @@ def main():
     
     timer1 = time.time()
     timer2 = time.time()
+    filecheck = False
     
     while True:
         if ENABLE_SD:
             if not GPIO.input(CD_PIN):
+                if not filecheck:
+                    fileCheck()
+                    filecheck = True
                 mainScreen()
                 dataStoreCheck()
             else:
-                print('Show error to LCD')
-                time.sleep(1)
+                lcd.move_to(1,0)
+                lcd.putstr("Insert SD Card")
+                lcd.move_to(0,1)
+                lcd.putstr('Unplug to start')
+                #time.sleep(5)
         else:
             mainScreen()
             dataStoreCheck()
@@ -295,11 +303,15 @@ def runHackrf(internetflag, dataParams=[]):
     iq, Error = hackrf.hackrf_run(scans)
     
     ''' End of Hackrf Func '''
+    lcd.custom_char(0,customChar.RecordSym('offleft'))
+    lcd.custom_char(1,customChar.RecordSym('offright'))
+    lcd.custom_char(2,customChar.RecordSym('onleft'))
+    lcd.custom_char(3,customChar.RecordSym('onright'))
     lcd.clearRow(1)
-    # lcd.move_to(0,0)
-    # lcd.putchar(chr(0))
-    # lcd.move_to(1,0)
-    # lcd.putchar(chr(1))
+    lcd.move_to(0,0)
+    lcd.putchar(chr(0))
+    lcd.move_to(1,0)
+    lcd.putchar(chr(1))
     lcd.move_to(0,1)
     lcd.putstr('Record Complete')
     
@@ -373,7 +385,7 @@ def runHackrf(internetflag, dataParams=[]):
             lcd.clearRow(1)
             lcd.move_to(0,1)
             lcd.putstr('Upload Complete')
-            time.sleep(2)
+            time.sleep(3)
             lcd.clearRow(1)
         else:
             hackrf.close()
@@ -418,11 +430,11 @@ def runHackrf(internetflag, dataParams=[]):
             else:
                 pass
     else:
-        # ''' When Error is reported ''' 
-        # lcd.move_to(0,1)
-        # lcd.putstr('Reported Error')
-        # time.sleep(2)
-        # lcd.clearRow(1)
+        ''' When Error is reported ''' 
+        lcd.move_to(0,1)
+        lcd.putstr('Reported Error')
+        time.sleep(2)
+        lcd.clearRow(1)
         if DEBUG:
             writeToUARTln("Reported Error")
         else:
