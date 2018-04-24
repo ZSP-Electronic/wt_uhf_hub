@@ -231,7 +231,7 @@ def dataStoreCheck():
                to do besides nothing '''
             lcd.clearRow(1)
             lcd.move_to(0,1)
-            lcd.putstr('Requesting Data')
+            lcd.putstr('Reading Params')
             
             if DEBUG:
                 writeToUARTln('Requesting Data from SD config file')
@@ -428,7 +428,7 @@ def runHackrf(internetflag, dataParams=[]):
                 ''' Uploading ''' 
                 lcd.clearRow(1)
                 lcd.move_to(0,1)
-                lcd.putstr('Upload Complete')
+                lcd.putstr('Update Complete')
                 time.sleep(2)
                 lcd.clearRow(1)
             else:
