@@ -232,6 +232,7 @@ def dataStoreCheck():
             lcd.clearRow(1)
             lcd.move_to(0,1)
             lcd.putstr('Reading Params')
+            time.sleep(2)
             
             if DEBUG:
                 writeToUARTln('Requesting Data from SD config file')
