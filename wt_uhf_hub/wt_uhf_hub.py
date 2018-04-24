@@ -44,7 +44,7 @@ def mainScreen():
     lcd.putstr(time.strftime('%m/%d %H:%M', time.localtime()))
 
 
-LCD_I2C_ADDR = 0x3d
+LCD_I2C_ADDR = 0x3f
 lcd = I2cLcd(1, LCD_I2C_ADDR, 2, 16)
 introScreen()
 
@@ -63,6 +63,7 @@ TIMER2_TIME = 20
 SDDIR = '/media/card/'
 SDSAVEDFILESDIR = '/media/card/savedFiles/'
 CREDDIR = '/media/card/Credentials.txt'
+CONFIGDIR = '/media/card/config.txt'
 UART_PORT = '/dev/ttyO4'
 CD_PIN = 'P2_35'
 
@@ -73,6 +74,8 @@ request = False
 
 ''' Section to detect if Credentials file exists. if not it creates it'''
 def fileCheck():
+    global JSON_LOC, BUCKET_NAME, KIND, ID_NAME, ADV_NAME
+    
     if ENABLE_SD:
         if not os.path.exists(CREDDIR):
             credFile = open(CREDDIR, 'w')
@@ -89,7 +92,7 @@ def fileCheck():
             while True:
                 lcd.move_to(0,0)
                 lcd.putstr('Credential File')
-                lcd.move_to(1,4)
+                lcd.move_to(4,1)
                 lcd.putstr('Created.')
                 time.sleep(5)
                 lcd.clear()
@@ -168,6 +171,7 @@ def main():
 ''' This function checks the interntflag and determines if should request data
     from dataStore or to use the sd card to store file '''
 def dataStoreCheck():
+    global JSON_LOC, BUCKET_NAME, KIND, ID_NAME, ADV_NAME
     global timer1, timer2
     global request
     global data
@@ -207,7 +211,7 @@ def dataStoreCheck():
             
             lcd.clearRow(1)
             lcd.move_to(0,1)
-            lcd.putstr('{} to {}'. format(incremFreq, incremFreq + samprate))
+            lcd.putstr('{} to {}'. format(incremFreq/1.0e6, (incremFreq + samprate)/1.0e6))
             
             if DEBUG:
                 for element in data:
@@ -250,8 +254,7 @@ def dataStoreCheck():
             
             lcd.clearRow(1)
             lcd.move_to(0,1)
-            lcd.putstr('{} to {}'. format(incremFreq/1.0e6, 
-            (incremFreq/1.0e6) + (samprate/1.0e6)))
+            lcd.putstr('{} to {}'. format(incremFreq/1.0e6, (incremFreq + samprate)/1.0e6))
             
             if DEBUG:
                 for element in data:
@@ -277,6 +280,7 @@ def dataStoreCheck():
     parameters from the sd card. Run the hackrf the appropriate amount of times
     then save it to a file and save the file appropriately. '''
 def runHackrf(internetflag, dataParams=[]):
+    global JSON_LOC, BUCKET_NAME, KIND, ID_NAME, ADV_NAME
     global ENABLE_SD
     
     ''' Start of Hackrf Func '''
@@ -416,7 +420,7 @@ def runHackrf(internetflag, dataParams=[]):
                     else:
                         print('Data Updated')
                         
-                writeFile = open(SDDIR + 'config.txt', 'w')
+                writeFile = open(CONFIGDIR, 'w')
                 writeFile.write(str(infoArray[0]) + ', ' + str(infoArray[1]) + 
                 ', ' + str(infoArray[2]) + ', ' + str(infoArray[3]) + ', ' + 
                 str(infoArray[4]) + ', ' + str(infoArray[5]))
