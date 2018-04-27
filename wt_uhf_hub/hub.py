@@ -188,8 +188,8 @@ def dataStoreCheck():
     global JSON_LOC, BUCKET_NAME, KIND, ID_NAME, ADV_NAME
     global timer1, timer2
     global request
+    global data
 
-    data = []
     InternetFlag = False
     
     ''' First "if" statement checks if timer1 is greater than specified
@@ -208,15 +208,8 @@ def dataStoreCheck():
             else:
                 print('Requesting Data')
                 
-            try:
-                data = onlineData()
-            except Exception:
-                print('Datastore Timeout')
-                lcd.move_to(1,0)
-                lcd.putchar(chr(3))
-                data = offlineData()
+            data = onlineData()
             
-                            
             timer1 = time.time()
         else:
             '''This is for if not connected to internet. Nothing much
@@ -262,24 +255,24 @@ def onlineData():
     lna = tasks['lna']
     vga = tasks['vga']
     numscans = tasks['Scans']
-    data = [minFreq, incremFreq, maxFreq, samprate, lna, vga, numscans]
+    ondata = [minFreq, incremFreq, maxFreq, samprate, lna, vga, numscans]
             
     lcd.clearRow(1)
     lcd.move_to(0,1)
     lcd.putstr('{} to {}'. format(incremFreq/1.0e6, (incremFreq + samprate)/1.0e6))
             
     if DEBUG:
-        for element in data:
+        for element in ondata:
             writeToUART(element)
         writeToUART('\n')
     else:
-        print(data)
+        print(ondata)
                         
     #If there was a request collect hackrf data immediately
     if request == True:
-        runHackrf(True, data)
+        runHackrf(True, ondata)
         timer2 = time.time()
-    return data
+    return ondata
         
 ''' Function to collect params for offline collection '''
 def offlineData():
@@ -295,19 +288,19 @@ def offlineData():
     maxFreq = params[3]
     samprate= params[4]
 
-    data = [minFreq, incremFreq, maxFreq, samprate]
+    offdata = [minFreq, incremFreq, maxFreq, samprate]
             
     lcd.clearRow(1)
     lcd.move_to(0,1)
     lcd.putstr('{} to {}'. format(incremFreq/1.0e6, (incremFreq + samprate)/1.0e6))
             
     if DEBUG:
-        for element in data:
+        for element in offdata:
             writeToUART(element)
         writeToUART('\n')
     else:
-        print(data)
-    return data
+        print(offdata)
+    return offdata
 
 
 '''The Hackrf run function determines if the internet is connected. If it is
