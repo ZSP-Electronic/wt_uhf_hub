@@ -13,7 +13,7 @@ from pylibhackrf import hackrfCtrl
 from i2c_lcd import I2cLcd
 import customChar
 import Adafruit_BBIO.GPIO as GPIO
-import watchdog
+from watchdog import Watchdog
 import socket
 import time
 import serial
@@ -24,8 +24,15 @@ import numpy as np
 from google.cloud import storage
 
 def myHandler():
-  print "Whoa! Watchdog expired. Holy heavens!"
-  sys.exit()
+    print "Whoa! Watchdog expired. Holy heavens!"
+    lcd.clear()
+    lcd.move_to(0,0)
+    lcd.putstr('Restarting Main')
+    time.sleep(2)
+    lcd.clear()
+    main()
+    #os.system('reboot')
+
 
 def introScreen():
     ''' Intro Screen '''
@@ -49,7 +56,7 @@ def mainScreen():
 LCD_I2C_ADDR = 0x3f
 lcd = I2cLcd(1, LCD_I2C_ADDR, 2, 16)
 introScreen()
-watchdog = Watchdog(y, myHandler)
+watchdog = Watchdog(60, myHandler)
 
 from google.cloud import datastore
 
@@ -163,6 +170,7 @@ def main():
                     filecheck = True
                 mainScreen()
                 dataStoreCheck()
+                watchdog.reset()
             else:
                 lcd.move_to(1,0)
                 lcd.putstr("Insert SD Card")
@@ -385,9 +393,10 @@ def runHackrf(internetflag, dataParams=[]):
                 writeToUARTln(confirmation)
             else:
                 print(confirmation)
-            #os.remove(strname)
-            os.rename(BASE_PATH + strname, './' + strname)
-            os.path.join(SDSAVEDFILESDIR, strname)
+            os.remove(BASE_PATH + strname)
+            # os.rename(BASE_PATH + strname, './' + strname)
+            # print(strname)
+            # os.path.join(SDSAVEDFILESDIR, strname)
             
             #Request data from database
             client = datastore.Client.from_service_account_json(JSON_LOC)
