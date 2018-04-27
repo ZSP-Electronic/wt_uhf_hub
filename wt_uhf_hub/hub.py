@@ -13,13 +13,19 @@ from pylibhackrf import hackrfCtrl
 from i2c_lcd import I2cLcd
 import customChar
 import Adafruit_BBIO.GPIO as GPIO
+import watchdog
 import socket
 import time
 import serial
 import os
+import sys
 #import timeit 
 import numpy as np
 from google.cloud import storage
+
+def myHandler():
+  print "Whoa! Watchdog expired. Holy heavens!"
+  sys.exit()
 
 def introScreen():
     ''' Intro Screen '''
@@ -32,14 +38,10 @@ def introScreen():
 
 def mainScreen():
     ''' Main Screen '''
-    lcd.custom_char(0,customChar.RecordSym('offleft'))
-    lcd.custom_char(1,customChar.RecordSym('offright'))
-    lcd.custom_char(2,customChar.RecordSym('onleft'))
-    lcd.custom_char(3,customChar.RecordSym('onright'))
+    lcd.custom_char(0,customChar.RecordSym('offSym'))
+    lcd.custom_char(1,customChar.RecordSym('onSym'))
     lcd.move_to(0,0)
     lcd.putchar(chr(0))
-    lcd.move_to(1,0)
-    lcd.putchar(chr(1))
     lcd.move_to(5, 0)
     lcd.putstr(time.strftime('%m/%d %H:%M', time.localtime()))
 
@@ -47,6 +49,7 @@ def mainScreen():
 LCD_I2C_ADDR = 0x3f
 lcd = I2cLcd(1, LCD_I2C_ADDR, 2, 16)
 introScreen()
+watchdog = Watchdog(y, myHandler)
 
 from google.cloud import datastore
 
@@ -59,7 +62,7 @@ timer1 = 0
 timer2 = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
-#BASE_PATH = '/tmp/'
+BASE_PATH = '/tmp/'
 SDDIR = '/media/card/'
 SDSAVEDFILESDIR = '/media/card/savedFiles/'
 CREDDIR = '/media/card/Credentials.txt'
@@ -70,6 +73,11 @@ CD_PIN = 'P2_35'
 DEBUG = False
 ENABLE_SD = True
 request = False
+
+lcd.custom_char(0,customChar.RecordSym('offSym'))
+lcd.custom_char(1,customChar.RecordSym('onSym'))
+lcd.custom_char(2,customChar.RecordSym('internetOn'))
+lcd.custom_char(3,customChar.RecordSym('internetOff'))
 
 
 ''' Section to detect if Credentials file exists. if not it creates it'''
@@ -172,14 +180,17 @@ def dataStoreCheck():
     global JSON_LOC, BUCKET_NAME, KIND, ID_NAME, ADV_NAME
     global timer1, timer2
     global request
-    global InternetFlag
-    
+
     data = []
+    InternetFlag = False
+    
     ''' First "if" statement checks if timer1 is greater than specified
     time and if connected to internet request from Datastore. '''
     if time.time() - timer1 > TIMER1_TIME:
         InternetFlag = InternetCheck()
         if InternetFlag:
+            lcd.move_to(1,0)
+            lcd.putchar(chr(2))
             lcd.clearRow(1)
             lcd.move_to(0,1)
             lcd.putstr('Requesting Data')
@@ -188,10 +199,13 @@ def dataStoreCheck():
                 writeToUARTln('Requesting Data from Datastore')
             else:
                 print('Requesting Data')
+                
             try:
                 data = onlineData()
             except Exception:
                 print('Datastore Timeout')
+                lcd.move_to(1,0)
+                lcd.putchar(chr(3))
                 data = offlineData()
             
                             
@@ -199,6 +213,8 @@ def dataStoreCheck():
         else:
             '''This is for if not connected to internet. Nothing much
                to do besides nothing '''
+            lcd.move_to(1,0)
+            lcd.putchar(chr(3))
             lcd.clearRow(1)
             lcd.move_to(0,1)
             lcd.putstr('Reading Params')
@@ -218,10 +234,10 @@ def dataStoreCheck():
         this function. '''
     if time.time() - timer2 > TIMER2_TIME:
         runHackrf(InternetFlag, data)
-        GPIO.output("USR3", GPIO.LOW)            
+        
         timer1 = time.time()
         timer2 = time.time()
-        
+''' Function to run online data collection '''    
 def onlineData():
     #Request data from database
     client = datastore.Client.from_service_account_json(JSON_LOC)
@@ -253,11 +269,11 @@ def onlineData():
                         
     #If there was a request collect hackrf data immediately
     if request == True:
-        runHackrf(InternetFlag, data)
+        runHackrf(True, data)
         timer2 = time.time()
-    
     return data
         
+''' Function to collect params for offline collection '''
 def offlineData():
     params = []
     with open(SDDIR + 'config.txt', 'r') as configFile:
@@ -283,7 +299,6 @@ def offlineData():
         writeToUART('\n')
     else:
         print(data)
-        
     return data
 
 
@@ -297,9 +312,7 @@ def runHackrf(internetflag, dataParams=[]):
     
     ''' Start of Hackrf Func '''
     lcd.move_to(0,0)
-    lcd.putchar(chr(2))
-    lcd.move_to(1,0)
-    lcd.putchar(chr(3))
+    lcd.putchar(chr(1))
     #Error = False
     #Collect the data
     if internetflag:
@@ -319,17 +332,12 @@ def runHackrf(internetflag, dataParams=[]):
     iq, Error = hackrf.hackrf_run(scans)
     
     ''' End of Hackrf Func '''
-    lcd.custom_char(0,customChar.RecordSym('offleft'))
-    lcd.custom_char(1,customChar.RecordSym('offright'))
-    lcd.custom_char(2,customChar.RecordSym('onleft'))
-    lcd.custom_char(3,customChar.RecordSym('onright'))
-    lcd.clearRow(1)
     lcd.move_to(0,0)
     lcd.putchar(chr(0))
-    lcd.move_to(1,0)
-    lcd.putchar(chr(1))
+    lcd.clearRow(1)
     lcd.move_to(0,1)
     lcd.putstr('Record Complete')
+    time.sleep(1.5)
     
     if not Error:
         ''' Store data to file name '''
@@ -341,17 +349,21 @@ def runHackrf(internetflag, dataParams=[]):
             writeToUARTln(strname)
         else:
             print(strname)
-        
-        if internetflag:
-            ''' Save npz file '''
-            np.savez_compressed(os.path.join(SDSAVEDFILESDIR, strname), data_pts = data_pts, iq = iq)
-        else:
-            np.savez_compressed(os.path.join(SDSAVEDFILESDIR, strname), data_pts = data_pts, iq = iq)
             
-        strname = strname + '.npz'
-        
         ''' Perform second internet check if internet lost during hackrf capture'''
         newInternetFlag = InternetCheck()
+        
+        if newInternetFlag:
+            ''' Save npz file '''
+            np.savez_compressed(os.path.join(BASE_PATH, strname), data_pts = data_pts, iq = iq)
+            lcd.move_to(1,0)
+            lcd.putchar(chr(2))
+        else:
+            np.savez_compressed(os.path.join(SDSAVEDFILESDIR, strname), data_pts = data_pts, iq = iq)
+            lcd.move_to(1,0)
+            lcd.putchar(chr(3))
+            
+        strname = strname + '.npz'
         
         #Save file to storage or SD card
         if newInternetFlag:
@@ -360,14 +372,21 @@ def runHackrf(internetflag, dataParams=[]):
             
             bucket = storage_client.get_bucket(BUCKET_NAME)
                         
-            blob = bucket.blob(os.path.basename(SDSAVEDFILESDIR + strname))
-            blob.upload_from_filename(SDSAVEDFILESDIR + strname)
+            blob = bucket.blob(os.path.basename(BASE_PATH + strname))
+            blob.upload_from_filename(BASE_PATH + strname)
             confirmation = "File {} stored via Cloud".format(strname)
+            
+            lcd.clearRow(1)
+            lcd.move_to(0,1)
+            lcd.putstr('File in Cloud')
+            time.sleep(1.5)
+    
             if DEBUG:
                 writeToUARTln(confirmation)
             else:
                 print(confirmation)
             #os.remove(strname)
+            os.rename(BASE_PATH + strname, './' + strname)
             os.path.join(SDSAVEDFILESDIR, strname)
             
             #Request data from database
@@ -406,6 +425,12 @@ def runHackrf(internetflag, dataParams=[]):
         else:
             hackrf.close()
             if ENABLE_SD:
+                
+                lcd.clearRow(1)
+                lcd.move_to(0,1)
+                lcd.putstr('File in SD')
+                time.sleep(1.5)
+            
                 confirmation = "File {} stored via SD card".format(strname)
                 if DEBUG:
                     writeToUARTln(confirmation)
