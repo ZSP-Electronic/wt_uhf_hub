@@ -11,9 +11,10 @@
 
 from pylibhackrf import hackrfCtrl
 from i2c_lcd import I2cLcd
+from watchdog import Watchdog
 import customChar
 import Adafruit_BBIO.GPIO as GPIO
-from watchdog import Watchdog
+import threading
 import socket
 import time
 import serial
@@ -23,17 +24,37 @@ import sys
 import numpy as np
 from google.cloud import storage
 
+
+''' Watchdog timer timeout handle to go to main or reboot is timeout exceeds
+    10 timeouts for safety '''
 def myHandler():
+    global numWDTHandle
+    
+    numWDTHandle += 1
+    
+    print('WDT Timeout count {}'.format(numWDTHandle))
     print "Whoa! Watchdog expired. Holy heavens!"
     lcd.clear()
     lcd.move_to(0,0)
     lcd.putstr('Restarting Main')
     time.sleep(2)
     lcd.clear()
+    watchdog.reset()
+    
+    if numWDTHandle == 20:
+        os.system('reboot')
     main()
-    #os.system('reboot')
+    
 
+''' Ring of Power task handler to blink led so long as program runs '''
+def ropHandler():
+    while True:
+        GPIO.output('P2_20', GPIO.HIGH)
+        time.sleep(1.5)
+        GPIO.output('P2_20', GPIO.LOW)
+        time.sleep(1.5)
 
+''' Intro screen for the lcd '''
 def introScreen():
     ''' Intro Screen '''
     lcd.clear()
@@ -43,6 +64,8 @@ def introScreen():
     lcd.putstr('UHF Hub')
     time.sleep(3)
 
+
+''' Main screen that shows time and record symbol '''
 def mainScreen():
     ''' Main Screen '''
     lcd.custom_char(0,customChar.RecordSym('offSym'))
@@ -52,11 +75,14 @@ def mainScreen():
     lcd.move_to(5, 0)
     lcd.putstr(time.strftime('%m/%d %H:%M', time.localtime()))
 
-
+GPIO.setup('P2_20', GPIO.OUT)
+GPIO.output('P2_20', GPIO.LOW)
 LCD_I2C_ADDR = 0x3f
 lcd = I2cLcd(1, LCD_I2C_ADDR, 2, 16)
 introScreen()
-watchdog = Watchdog(60, myHandler)
+watchdog = Watchdog(180, myHandler)
+rop = threading.Thread(target=ropHandler)
+rop.start()
 
 from google.cloud import datastore
 
@@ -67,6 +93,7 @@ samprate= 0
 incremFreq = 0
 timer1 = 0
 timer2 = 0
+numWDTHandle = 0
 TIMER1_TIME = 15
 TIMER2_TIME = 20
 BASE_PATH = '/tmp/'
@@ -81,10 +108,16 @@ DEBUG = False
 ENABLE_SD = True
 request = False
 
+
+''' Add custom characters to lcd '''
 lcd.custom_char(0,customChar.RecordSym('offSym'))
 lcd.custom_char(1,customChar.RecordSym('onSym'))
 lcd.custom_char(2,customChar.RecordSym('internetOn'))
 lcd.custom_char(3,customChar.RecordSym('internetOff'))
+lcd.custom_char(4,customChar.RingofPower('topleft'))
+lcd.custom_char(5,customChar.RingofPower('topright'))
+lcd.custom_char(6,customChar.RingofPower('bottomright'))
+lcd.custom_char(7,customChar.RingofPower('bottomleft'))
 
 
 ''' Section to detect if Credentials file exists. if not it creates it'''
@@ -171,6 +204,7 @@ def main():
                 mainScreen()
                 dataStoreCheck()
                 watchdog.reset()
+                
             else:
                 lcd.move_to(1,0)
                 lcd.putstr("Insert SD Card")
@@ -227,7 +261,7 @@ def dataStoreCheck():
                 print("No Internet == Read SD card")
                 
             data = offlineData()
-            
+
             timer1 = time.time()
                         
     ''' Second "if" statement is used to run the hackrf. The global 
@@ -244,7 +278,7 @@ def onlineData():
     client = datastore.Client.from_service_account_json(JSON_LOC)
     key_complete = client.key(KIND, ID_NAME)
     tasks = client.get(key_complete)
-                        
+    
     #Put properties of request into varaibles
     request = tasks['Request']
     advRequest = tasks['ADV_Request']
@@ -282,7 +316,7 @@ def offlineData():
             numbers_float = map(float, line.split(', '))
             for number in numbers_float:
                 params.append(number)
-
+    
     minFreq = params[1]
     incremFreq = params[2]
     maxFreq = params[3]
@@ -356,7 +390,7 @@ def runHackrf(internetflag, dataParams=[]):
         
         if newInternetFlag:
             ''' Save npz file '''
-            np.savez_compressed(os.path.join(BASE_PATH, strname), data_pts = data_pts, iq = iq)
+            np.savez_compressed(os.path.join(SDSAVEDFILESDIR, strname), data_pts = data_pts, iq = iq)
             lcd.move_to(1,0)
             lcd.putchar(chr(2))
         else:
@@ -369,42 +403,45 @@ def runHackrf(internetflag, dataParams=[]):
         #Save file to storage or SD card
         if newInternetFlag:
             hackrf.close()
+
             storage_client = storage.Client.from_service_account_json(JSON_LOC)
-            
+                
             bucket = storage_client.get_bucket(BUCKET_NAME)
-                        
-            blob = bucket.blob(os.path.basename(BASE_PATH + strname))
-            blob.upload_from_filename(BASE_PATH + strname)
+                            
+            blob = bucket.blob(os.path.basename(SDSAVEDFILESDIR + strname))
+            blob.upload_from_filename(SDSAVEDFILESDIR + strname)
             confirmation = "File {} stored via Cloud".format(strname)
             
             lcd.clearRow(1)
             lcd.move_to(0,1)
             lcd.putstr('File in Cloud')
             time.sleep(1.5)
+            
+            watchdog.reset()
     
             if DEBUG:
                 writeToUARTln(confirmation)
             else:
                 print(confirmation)
-            os.remove(BASE_PATH + strname)
             # os.rename(BASE_PATH + strname, './' + strname)
             # print(strname)
             # os.path.join(SDSAVEDFILESDIR, strname)
+            
             
             #Request data from database
             client = datastore.Client.from_service_account_json(JSON_LOC)
             key_complete = client.key(KIND, ID_NAME)
             tasks = client.get(key_complete)
-                    
+                        
             #Put properties of request into varibles
             request = tasks['Request']
             minFreq = tasks['min_frequency']
             maxFreq = tasks['max_frequency']
             samprate= tasks['sample_rate']
             incremFreq = tasks['increment_frequency']
-            
+                
             newfreq = incremFreq + samprate
-            
+                
             if newfreq >= maxFreq:
                 print("Setting increment frequency back to minimum frequency")
                 if DEBUG:
@@ -416,8 +453,10 @@ def runHackrf(internetflag, dataParams=[]):
                     writeToUARTln("Data Updated")
                 else:
                     print('Data Updated')
-
+    
             client.put(tasks)
+                
+                
             ''' Uploading ''' 
             lcd.clearRow(1)
             lcd.move_to(0,1)
@@ -518,7 +557,6 @@ def writeToUARTln(message):
         ser.write(str(message) + '\n')
         #print("Serial is open!")
     ser.close()
-    
     
 
 if __name__ == '__main__':
