@@ -155,6 +155,7 @@ def fileCheck():
                 lcd.move_to(1,0)
                 lcd.putstr('and Restart')
                 time.sleep(5)
+                watchdog.reset()
         else:
             f = open(CREDDIR, 'r')
             information = f.readlines()
@@ -281,20 +282,41 @@ def dataStoreCheck():
 ''' Function to run online data collection '''    
 def onlineData():
     #Request data from database
-    client = datastore.Client.from_service_account_json(JSON_LOC)
-    key_complete = client.key(KIND, ID_NAME)
-    tasks = client.get(key_complete)
+    try:
+        client = datastore.Client.from_service_account_json(JSON_LOC)
+    except IOError:
+        lcd.clear()
+        while True:
+            lcd.move_to(0,0)
+            lcd.putstr('JSON Name')
+            lcd.move_to(0,1)
+            lcd.putstr('Incorrect')
+            time.sleep(10)
+            watchdog.reset()
+    try:
+        key_complete = client.key(KIND, ID_NAME)
+        tasks = client.get(key_complete)
     
-    #Put properties of request into varaibles
-    request = tasks['Request']
-    advRequest = tasks['ADV_Request']
-    minFreq = tasks['min_frequency']
-    incremFreq = tasks['increment_frequency']
-    maxFreq = tasks['max_frequency']
-    samprate= tasks['sample_rate']
-    lna = tasks['lna']
-    vga = tasks['vga']
-    numscans = tasks['Scans']
+        #Put properties of request into varaibles
+        request = tasks['Request']
+        advRequest = tasks['ADV_Request']
+        minFreq = tasks['min_frequency']
+        incremFreq = tasks['increment_frequency']
+        maxFreq = tasks['max_frequency']
+        samprate= tasks['sample_rate']
+        lna = tasks['lna']
+        vga = tasks['vga']
+        numscans = tasks['Scans']
+    except TypeError:
+        lcd.clear()
+        while True:
+            lcd.move_to(0,0)
+            lcd.putstr('Store Kind or ID')
+            lcd.move_to(0,1)
+            lcd.putstr('Incorrect')
+            time.sleep(10)
+            watchdog.reset()
+            
     ondata = [minFreq, incremFreq, maxFreq, samprate, lna, vga, numscans]
             
     lcd.clearRow(1)
