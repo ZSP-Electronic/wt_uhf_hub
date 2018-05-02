@@ -2,7 +2,7 @@
 # Electronic Systems Engineering Technology
 # ESET-420 Capstone II
 # Author: Zachary Pina
-# File: main.py
+# File: hub.py
 # --------
 # Main is the heart of the program that runs the code. The code will determine
 # if it connected to the internet then request data from the google Datastore
@@ -134,6 +134,12 @@ def fileCheck():
             credFile.write("Datastore ID Name:\n")
             credFile.write("Datastore Adv ID Name:\n")
             credFile.close()
+            if not os.path.exists(SDSAVEDFILESDIR):
+                os.makedirs(SDSAVEDFILESDIR)
+            if not os.path.exists(CONFIGDIR):
+                conffile = open(CONFIGDIR, 'w')
+                conffile.write('0, 420e6, 420e6, 512e6, 2.5e6, 0')
+                conffile.close()
                 
             # print("Output to LCD: Credentials file created.\
             # Input credentials and restart")
