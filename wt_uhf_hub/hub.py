@@ -305,7 +305,7 @@ def onlineData():
         samprate= tasks['sample_rate']
         lna = tasks['lna']
         vga = tasks['vga']
-        numscans = tasks['Scans']
+        numscans = int(tasks['Scans'])
     except TypeError:
         lcd.clear()
         while True:
