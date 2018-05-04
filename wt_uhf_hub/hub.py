@@ -169,7 +169,7 @@ def fileCheck():
             BUCKET_NAME = str(infoArray[2])
             KIND = str(infoArray[3])
             ID_NAME = str(infoArray[4])
-            ADV_NAME = str(infoArray[5])
+            #ADV_NAME = str(infoArray[5])
     else:
         pass
 
@@ -299,7 +299,6 @@ def onlineData():
     
         #Put properties of request into varaibles
         request = tasks['Request']
-        advRequest = tasks['ADV_Request']
         minFreq = tasks['min_frequency']
         incremFreq = tasks['increment_frequency']
         maxFreq = tasks['max_frequency']
@@ -370,7 +369,7 @@ def offlineData():
     parameters from the sd card. Run the hackrf the appropriate amount of times
     then save it to a file and save the file appropriately. '''
 def runHackrf(internetflag, dataParams=[]):
-    global JSON_LOC, BUCKET_NAME, KIND, ID_NAME, ADV_NAME
+    global JSON_LOC, BUCKET_NAME, KIND, ID_NAME
     global ENABLE_SD
     
     ''' Start of Hackrf Func '''
@@ -492,7 +491,6 @@ def runHackrf(internetflag, dataParams=[]):
             time.sleep(3)
             lcd.clearRow(1)
         else:
-            hackrf.close()
             if ENABLE_SD:
                 
                 lcd.clearRow(1)
@@ -540,6 +538,7 @@ def runHackrf(internetflag, dataParams=[]):
             else:
                 pass
     else:
+        hackrf.close()
         ''' When Error is reported ''' 
         lcd.move_to(0,1)
         lcd.putstr('Reported Error')
